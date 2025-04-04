@@ -1,65 +1,84 @@
 #include "user.h"
+#include <iostream>
+#include <algorithm>
 
-/**
- * Creates a new User with the given name and no friends.
- */
 User::User(const std::string& name)
-  : _name(name)
-  , _friends(nullptr)
-  , _size(0)
-  , _capacity(0)
-{
-}
+  : _name(name), _friends(nullptr), _size(0), _capacity(0) {}
 
-/**
- * Adds a friend to this User's list of friends.
- * @param name The name of the friend to add.
- */
-void
-User::add_friend(const std::string& name)
-{
-  if (_size == _capacity) {
-    _capacity = 2 * _capacity + 1;
-    std::string* newFriends = new std::string[_capacity];
-    for (size_t i = 0; i < _size; ++i) {
-      newFriends[i] = _friends[i];
-    }
+User::~User() {
     delete[] _friends;
-    _friends = newFriends;
-  }
-
-  _friends[_size++] = name;
 }
 
-/**
- * Returns the name of this User.
- */
-std::string
-User::get_name() const
-{
-  return _name;
+User::User(const User& user) : _name(user._name), _size(user._size), _capacity(user._capacity) {
+    _friends = new std::string[_capacity];
+    std::copy(user._friends, user._friends + _size, _friends);
 }
 
-/**
- * Returns the number of friends this User has.
- */
-size_t
-User::size() const
-{
-  return _size;
+User& User::operator=(const User& user) {
+    if (this != &user) {
+        delete[] _friends;
+        _name = user._name;
+        _size = user._size;
+        _capacity = user._capacity;
+        _friends = new std::string[_capacity];
+        std::copy(user._friends, user._friends + _size, _friends);
+    }
+    return *this;
 }
 
-/**
- * Sets the friend at the given index to the given name.
- * @param index The index of the friend to set.
- * @param name The name to set the friend to.
- */
-void User::set_friend(size_t index, const std::string& name)
-{
-  _friends[index] = name;
+void User::add_friend(const std::string& name) {
+    // Si ya no hay espacio, crear un nuevo array más grande
+    if (_size == _capacity) {
+        size_t new_capacity = _capacity == 0 ? 1 : _capacity * 2;
+        std::string* new_friends = new std::string[new_capacity];
+        
+        // Copiar los amigos existentes al nuevo array
+        for (size_t i = 0; i < _size; ++i) {
+            new_friends[i] = _friends[i];
+        }
+        
+        // Liberar el array antiguo y actualizar los punteros/capacidad
+        delete[] _friends;
+        _friends = new_friends;
+        _capacity = new_capacity;
+    }
+    
+    // Añadir el nuevo amigo
+    _friends[_size++] = name;
 }
 
-/** 
- * STUDENT TODO:
- * The definitions for your custom operators and special member functions will go here!
- */
+std::string User::get_name() const {
+    return _name;
+}
+
+size_t User::size() const {
+    return _size;
+}
+
+void User::set_friend(size_t index, const std::string& name) {
+    if (index < _size) {
+        _friends[index] = name;
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const User& user) {
+    os << "User(name=" << user._name << ", friends=[";
+    for (size_t i = 0; i < user._size; ++i) {
+        os << user._friends[i];
+        if (i < user._size - 1) os << ", ";
+    }
+    os << "])";
+    return os;
+}
+
+User& User::operator+=(User& rhs) {
+    if (this != &rhs) {
+        add_friend(rhs._name);
+        rhs.add_friend(_name);
+    }
+    return *this;
+}
+
+bool User::operator<(const User& rhs) const {
+    return _name < rhs._name;
+}
