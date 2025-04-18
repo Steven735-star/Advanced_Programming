@@ -1,0 +1,59 @@
+
+---------------------TASK1.1-----------------------
+
+What is the output of this program?
+v1 size: 0, v2 size: 4, v3 size: 4.
+
+Why does v1.size() return 0 after the move?
+Because v1's internal data was transferred to v3, leaving v1 empty.
+
+What does std::move do?
+It casts the object to an rvalue reference to enable move semantics instead of copying.
+
+Why is v1 still in a valid but unspecified state?
+Because the C++ standard requires moved-from objects to remain valid, though their content is undefined.
+
+---------------------Task3.1----------------------------------
+Which constructors and assignments are called and when?
+
+Buffer b1(100) - Regular constructor
+Buffer b2 = b1 - Copy constructor (copying from b1)
+Buffer b3 = std::move(b1) - Move constructor (moving from b1)
+Buffer b4(50) - Regular constructor
+b4 = b2 - Copy assignment operator (copying from b2 to b4)
+b4 = std::move(b2) - Move assignment operator (moving from b2 to b4)
+
+What happens to the source object after a move?
+After a move, the source object (b1 after the move to b3, and b2 after the move to b4) is left in a valid but modified state. Based on our implementation, the source object's data pointer is set to nullptr and its size to 0. This ensures the moved-from object doesn't try to delete memory that has been transferred to another object.
+
+What would happen if the move constructor or assignment wasn't defined?
+If move constructor/assignment weren't defined, the compiler would use the copy constructor/assignment instead. This would mean:
+
+-Resources would be duplicated rather than transferred
+-Performance would be worse due to unnecessary memory allocation and copying
+-The original object would remain unchanged rather than being "emptied"
+
+------------------------Summary------------------------------
+What did you learn about move semantics?
+Move semantics in C++ provide a way to transfer ownership of resources (like dynamically allocated memory) from one object to another without making expensive copies. This is particularly useful when working with large data structures or when objects manage unique resources. The key difference from copy semantics is that the source object is modified - it gives up its resources rather than having them duplicated.
+
+In what kind of projects would this be important?
+Move semantics are particularly important in:
+
+-Performance-critical applications where copying large data structures would be expensive
+-Resource management systems where objects own unique resources (file handles, network connections)
+-Container implementations like vectors, lists, or maps
+-Game engines handling large assets or particle systems
+-Applications dealing with large datasets or media files
+-Multithreaded applications where transferring ownership between threads is necessary
+
+What are some risks of using std::move incorrectly?
+Risks of incorrect std::move usage include:
+
+-Using the moved-from object without reinitializing it first
+-Moving objects that don't support move semantics properly
+-Using std::move on objects passed by value (unnecessary)
+-Moving const objects (which will be copied instead)
+-Moving objects that are still needed in their original state
+-Creating dangling references if moving objects that other parts of the code hold references to
+-Thread safety issues if moved objects are being accessed concurrently
